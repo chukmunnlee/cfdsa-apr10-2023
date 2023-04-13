@@ -1,0 +1,37 @@
+apiVersion: skaffold/v4beta4 
+kind: Config 
+metadata:
+  name: my-dev
+
+build:
+  artifacts:
+  - image: chukmunnlee/go-dov-bear 
+    context: src
+  tagPolicy:
+    gitCommit: {}
+  local:
+    tryImportMissing: true
+    push: 
+    useBuildkit: 
+
+manifests:
+  kustomize:
+    paths:
+    - prod
+
+deploy:
+  kubectl:
+    flags:
+      apply:
+      - -oyaml
+      delete:
+      - --force
+      - --grace-period=0
+
+portForward:
+- resourceType: Service 
+  resourceName: dov-svc
+  namespace: dov-ns
+  port: 3000
+  localPort: 8080
+  

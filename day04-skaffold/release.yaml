@@ -1,0 +1,74 @@
+apiVersion: v1
+data:
+  INSTANCE_NAME: prod-dov-bear
+kind: ConfigMap
+metadata:
+  labels:
+    env: prod
+  name: dov-cm-gmmkdgb6td
+  namespace: dov-ns
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: dov
+    env: prod
+    name: dov-svc
+  name: dov-svc
+  namespace: dov-ns
+spec:
+  ports:
+    - port: 3000
+      targetPort: 3000
+  selector:
+    app: dov
+    env: prod
+    name: dov-po
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: dov
+    env: prod
+    name: dov-deploy
+  name: dov-deploy
+  namespace: dov-ns
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dov
+      env: prod
+      name: dov-po
+  template:
+    metadata:
+      labels:
+        app: dov
+        env: prod
+        name: dov-po
+      name: dov-po
+    spec:
+      containers:
+        - env:
+            - name: INSTANCE_HASH
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          envFrom:
+            - configMapRef:
+                name: dov-cm-gmmkdgb6td
+          image: chukmunnlee/go-dov-bear:8c24f7a-dirty@sha256:358339258d18e016d5d9a9721a0a7963c955136cca542dd1cc3a0a81d7564ad9
+          imagePullPolicy: IfNotPresent
+          name: dov-container
+          ports:
+            - containerPort: 3000
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi

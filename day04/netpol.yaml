@@ -1,0 +1,62 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy 
+metadata: 
+  name: deny-all
+  namespace: mysql 
+  labels:
+    app: mysql
+    name: deny-all
+spec: 
+  policyTypes:
+  - Ingress 
+  - Egress
+  podSelector: 
+    matchLabels:
+      app: db 
+      name: mysql-po
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy 
+metadata: 
+  name: allow-netshoot
+  namespace: mysql 
+spec: 
+  policyTypes:
+  - Ingress 
+  podSelector: 
+    matchLabels:
+      app: db 
+      name: mysql-po
+  ingress:
+  - from: 
+    - podSelector: 
+        matchLabels:
+          run: msyql-netshoot
+      namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: mysql
+  - from:
+    - namespaceSelector: 
+        matchLabels:
+          kubernetes.io/metadata.name: default
+    ports:
+    - port: 3306
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy 
+metadata: 
+  name: allow-to-192-168
+  namespace: mysql 
+spec: 
+  policyTypes:
+  - Egress 
+  podSelector: 
+    matchLabels:
+      app: db 
+      name: mysql-po
+  egress:
+  - to: 
+    - ipBlock: 
+        cidr: "192.168.0.0/16"
